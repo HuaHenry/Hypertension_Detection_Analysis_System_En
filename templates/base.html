@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hypertension Self-Test System</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient">
+        <button type="button" id="sidebarCollapse" class="btn btn-light">
+            <i class="fas fa-align-left"></i>
+        </button>
+        <a class="navbar-brand ml-2" href="#" style="font-weight: bolder; padding-left: 15px;">Hypertension Detection and Analysis System</a>
+        
+        <!-- 登录状态显示 -->
+        <div class="ml-auto">
+            {% if current_user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn dropdown-toggle text-white" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div class="user-avatar">
+                        {{ current_user.username[0]|upper }}
+                    </div>
+                    <span class="ml-2">{{ current_user.username }}</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                    <a class="dropdown-item" href="{{ url_for('personal_center') }}"><i class="fas fa-user-circle mr-2"></i>Profile</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="d-flex">
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light mr-2">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-light">Register</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <ul class="list-unstyled components">
+                <li><a href="{{ url_for('index') }}"><i class="fas fa-home" id="fa_home" style="width: 30px;"></i> Home</a></li>
+                <li><a href="{{ url_for('history') }}"><i class="fas fa-history" style="width: 30px;"></i> Records</a></li>
+                <li><a href="{{ url_for('data_analysis') }}"><i class="fas fa-chart-line" style="width: 30px;"></i> Analytics</a></li>
+                <li><a href="{{ url_for('blood_pressure_assessment') }}"><i class="fas fa-clipboard-check" style="width: 30px;"></i> BP Check</a></li>
+                <li><a href="{{ url_for('health_knowledge') }}"><i class="fas fa-book" style="width: 30px;"></i> Health Tips</a></li>
+                {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('personal_center') }}"><i class="fas fa-user" style="width: 30px;"></i> Profile</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt" style="width: 30px;"></i> Logout</a></li>
+                {% else %}
+                <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt" style="width: 30px;"></i> Login</a></li>
+                <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus" style="width: 30px;"></i> Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

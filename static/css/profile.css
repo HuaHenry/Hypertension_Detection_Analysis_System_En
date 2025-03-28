@@ -1,0 +1,113 @@
+/* Profile Page Specific Styles */
+.profile-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 30px rgba(0,0,0,0.15);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    background-color: #4e73df;
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    font-size: 48px;
+    line-height: 100px;
+    border-radius: 50%;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(78, 115, 223, 0.3);
+}
+
+.profile-username {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #2e3a59;
+}
+
+.profile-stats {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.profile-stats .col {
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.profile-stats .col:hover {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.profile-stats strong {
+    font-size: 20px;
+    display: block;
+    color: #4e73df;
+}
+
+.profile-stats span {
+    font-size: 12px;
+    color: #777;
+    text-transform: uppercase;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e3e6f0;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 15px 20px;
+}
+
+.card-header h5 {
+    margin-bottom: 0;
+    color: #2e3a59;
+    font-weight: 600;
+}
+
+.form-control-plaintext {
+    padding: 0.375rem 0;
+    line-height: 1.5;
+    color: #495057;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: none;
+}
+
+.btn-outline-danger {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+    background-color: #e74a3b;
+    color: white;
+}
+
+.modal-content {
+    border-radius: 10px;
+}
+
+.modal-header.bg-danger {
+    border-radius: 10px 10px 0 0;
+}

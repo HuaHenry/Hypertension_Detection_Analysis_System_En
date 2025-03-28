@@ -1,0 +1,49 @@
+/* 蓝色主题只应用于登录页面 */
+.login-container {
+    min-height: 70vh;
+    background: #f8f9fa;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 12px;
+    border: none;
+}
+
+/* 蓝色渐变标题 */
+.bg-blue-gradient {
+    background: linear-gradient(to right, #3498db, #2980b9);
+    padding: 1.5rem;
+    border-radius: 12px 12px 0 0;
+}
+
+/* 蓝色按钮 */
+.btn-blue {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+    transition: all 0.3s;
+}
+
+.btn-blue:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 蓝色图标背景 */
+.bg-blue {
+    background-color: #3498db !important;
+    color: white !important;
+}
+
+/* 蓝色文字链接 */
+.text-blue {
+    color: #3498db !important;
+}
+
+.text-blue:hover {
+    color: #2980b9 !important;
+    text-decoration: underline;
+}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- External CSS file -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+<div class="container-fluid">
+    <h1 class="mb-4">Dashboard</h1>
+    <div class="row">
+        <!-- Systolic Blood Pressure -->
+        <div class="col-md-4">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-heartbeat"></i> Systolic Pressure</h5>
+                    <p class="card-value">130 mmHg</p>
+                    <p class="card-meta">Last recorded: 2025/3/12 01:04</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diastolic Blood Pressure -->
+        <div class="col-md-4">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-heartbeat"></i> Diastolic Pressure</h5>
+                    <p class="card-value">90 mmHg</p>
+                    <p class="card-meta">Last recorded: 2025/3/12 01:04</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heart Rate -->
+        <div class="col-md-4">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-heart"></i> Heart Rate</h5>
+                    <p class="card-value">80 bpm</p>
+                    <p class="card-meta">Last recorded: 2025/3/12 01:04</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Pressure Status -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Blood Pressure Status</h5>
+                    <p class="card-value" style="color:#ffb515">Prehypertension</p>
+                    <p class="card-text">Recommendation: Monitor your blood pressure regularly and maintain a healthy diet with moderate exercise.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom styling for English version */
+    .card-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .card-meta {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+    
+    .card-text {
+        font-size: 1rem;
+        margin-top: 15px;
+    }
+    
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}

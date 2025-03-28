@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}"> -->
+
+<div class="container-fluid history-container">
+    <h1 class="mb-4 page-title">Blood Pressure History</h1>
+    <div class="row">
+        <!-- Systolic Pressure History -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <h5 class="card-title chart-title">
+                        <i class="fas fa-heartbeat chart-icon"></i> Systolic Pressure History
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="systolicChart"></canvas>
+                    </div>
+                    <div class="chart-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Average:</span>
+                            <span class="summary-value">128 mmHg</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Highest:</span>
+                            <span class="summary-value">135 mmHg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diastolic Pressure History -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <h5 class="card-title chart-title">
+                        <i class="fas fa-heartbeat chart-icon"></i> Diastolic Pressure History
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="diastolicChart"></canvas>
+                    </div>
+                    <div class="chart-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Average:</span>
+                            <span class="summary-value">83 mmHg</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Highest:</span>
+                            <span class="summary-value">88 mmHg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heart Rate History -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <h5 class="card-title chart-title">
+                        <i class="fas fa-heart chart-icon"></i> Heart Rate History
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="heartRateChart"></canvas>
+                    </div>
+                    <div class="chart-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Average:</span>
+                            <span class="summary-value">78 bpm</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Highest:</span>
+                            <span class="summary-value">81 bpm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blood Pressure Status History -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <h5 class="card-title chart-title">
+                        <i class="fas fa-chart-bar chart-icon"></i> BP Status History
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="status-legend">
+                        <div class="legend-item">
+                            <span class="legend-color normal"></span>
+                            <span class="legend-label">Normal</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color elevated"></span>
+                            <span class="legend-label">Elevated</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color high"></span>
+                            <span class="legend-label">High</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script>
+    // Color palette
+    const colors = {
+        systolic: '#6a11cb',
+        diastolic: '#28a745',
+        heartRate: '#ffc107',
+        normal: '#17a2b8',
+        elevated: '#ffc107',
+        high: '#dc3545'
+    };
+
+    // Common chart options
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: {
+                    size: 14,
+                    weight: 'bold'
+                },
+                bodyFont: {
+                    size: 12
+                },
+                padding: 12,
+                cornerRadius: 6
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: '#6c757d'
+                }
+            },
+            y: {
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                },
+                ticks: {
+                    color: '#6c757d'
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: 4,
+                hoverRadius: 6,
+                backgroundColor: '#fff',
+                borderWidth: 2
+            }
+        }
+    };
+
+    // Systolic Pressure Chart
+    const systolicCtx = document.getElementById('systolicChart').getContext('2d');
+    new Chart(systolicCtx, {
+        type: 'line',
+        data: {
+            labels: ['Mar 10', 'Mar 11', 'Mar 12', 'Mar 13', 'Mar 14', 'Mar 15', 'Mar 16', 'Mar 17'],
+            datasets: [{
+                label: 'Systolic (mmHg)',
+                data: [120, 130, 125, 135, 130, 128, 132, 129],
+                borderColor: colors.systolic,
+                backgroundColor: 'rgba(106, 17, 203, 0.05)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Systolic Pressure Trend',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+
+    // Diastolic Pressure Chart
+    const diastolicCtx = document.getElementById('diastolicChart').getContext('2d');
+    new Chart(diastolicCtx, {
+        type: 'line',
+        data: {
+            labels: ['Mar 10', 'Mar 11', 'Mar 12', 'Mar 13', 'Mar 14', 'Mar 15', 'Mar 16', 'Mar 17'],
+            datasets: [{
+                label: 'Diastolic (mmHg)',
+                data: [80, 85, 82, 88, 84, 83, 86, 81],
+                borderColor: colors.diastolic,
+                backgroundColor: 'rgba(40, 167, 69, 0.05)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Diastolic Pressure Trend',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+
+    // Heart Rate Chart
+    const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
+    new Chart(heartRateCtx, {
+        type: 'line',
+        data: {
+            labels: ['Mar 10', 'Mar 11', 'Mar 12', 'Mar 13', 'Mar 14', 'Mar 15', 'Mar 16', 'Mar 17'],
+            datasets: [{
+                label: 'Heart Rate (bpm)',
+                data: [75, 78, 80, 77, 79, 76, 81, 78],
+                borderColor: colors.heartRate,
+                backgroundColor: 'rgba(255, 193, 7, 0.05)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Heart Rate Trend',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+
+    // BP Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Mar 10', 'Mar 11', 'Mar 12', 'Mar 13', 'Mar 14', 'Mar 15', 'Mar 16', 'Mar 17'],
+            datasets: [{
+                label: 'BP Status',
+                data: [1, 2, 1, 3, 2, 1, 3, 2], // 1: Normal, 2: Elevated, 3: High
+                backgroundColor: [
+                    colors.normal,
+                    colors.elevated,
+                    colors.high,
+                    colors.normal,
+                    colors.elevated,
+                    colors.normal,
+                    colors.high,
+                    colors.elevated
+                ],
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            ...chartOptions,
+            plugins: {
+                ...chartOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Blood Pressure Status',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                ...chartOptions.scales,
+                y: {
+                    beginAtZero: true,
+                    max: 3,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            const statusMap = {
+                                1: 'Normal',
+                                2: 'Elevated',
+                                3: 'High'
+                            };
+                            return statusMap[value] || '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<style>
+    /* History Page Specific Styles */
+    .history-container {
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+    
+    .page-title {
+        color: #2c3e50;
+        font-weight: 600;
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .chart-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background-color: white;
+    }
+    
+    .chart-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+    
+    .chart-title {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .chart-icon {
+        margin-right: 10px;
+        color: #6a11cb;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+    
+    .chart-summary {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .summary-label {
+        font-size: 14px;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .summary-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-top: 5px;
+    }
+    
+    .status-legend {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin: 0 15px;
+    }
+    
+    .legend-color {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        margin-right: 8px;
+    }
+    
+    .legend-color.normal {
+        background-color: #17a2b8;
+    }
+    
+    .legend-color.elevated {
+        background-color: #ffc107;
+    }
+    
+    .legend-color.high {
+        background-color: #dc3545;
+    }
+    
+    .legend-label {
+        font-size: 14px;
+        color: #495057;
+    }
+    
+    @media (max-width: 768px) {
+        .chart-container {
+            height: 200px;
+        }
+        
+        .chart-summary {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}

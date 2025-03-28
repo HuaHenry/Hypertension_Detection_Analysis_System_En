@@ -1,0 +1,48 @@
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.card-text {
+    font-size: 1.2rem;
+}
+
+.display-4 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+/* 背景颜色 */
+.bg-primary {
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
+}
+
+.bg-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.bg-warning {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+}
+
+.bg-info {
+    background: linear-gradient(45deg, #17a2b8, #0dcaf0);
+}
+
+/* 图标样式 */
+/* .fas {
+    margin-right: 10px;
+} */

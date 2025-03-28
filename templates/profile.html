@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- User Profile Card -->
+            <div class="card profile-card mb-4">
+                <div class="card-body text-center">
+                    <div class="profile-avatar">
+                        {{ user.username[0]|upper }}
+                    </div>
+                    <h3 class="profile-username">{{ user.username }}</h3>
+                    <p class="text-muted">Member since {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+                    
+                    <div class="profile-stats mt-4">
+                        <div class="row">
+                            <div class="col">
+                                <strong>12</strong>
+                                <span>Records</span>
+                            </div>
+                            <div class="col">
+                                <strong>3</strong>
+                                <span>Alerts</span>
+                            </div>
+                            <div class="col">
+                                <strong>85%</strong>
+                                <span>Health</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Account Actions</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-outline-danger btn-block" data-toggle="modal" data-target="#deleteAccountModal">
+                        <i class="fas fa-trash-alt mr-2"></i>Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <!-- Personal Information Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Personal Information</h5>
+                    <button class="btn btn-sm btn-primary" id="editPersonalInfoBtn">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                </div>
+                <div class="card-body">
+                    <form id="personalInfoForm" action="{{ url_for('update_profile') }}" method="POST">
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Username</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" id="username" name="username" 
+                                       value="{{ user.username }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Email</label>
+                            <div class="col-sm-9">
+                                <input type="email" class="form-control-plaintext" id="email" name="email" 
+                                       value="{{ user.email }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Age</label>
+                            <div class="col-sm-9">
+                                <input type="number" class="form-control-plaintext" id="age" name="age" 
+                                       value="{{ user.age if user.age else '' }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Gender</label>
+                            <div class="col-sm-9">
+                                <select class="form-control-plaintext" id="gender" name="gender" disabled>
+                                    <option value="male" {% if user.gender and user.gender.value == 'male' %}selected{% endif %}>Male</option>
+                                    <option value="female" {% if user.gender and user.gender.value == 'female' %}selected{% endif %}>Female</option>
+                                    <option value="other" {% if user.gender and user.gender.value == 'other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Last Login</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" 
+                                       value="{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row d-none" id="personalInfoSubmitGroup">
+                            <div class="col-sm-9 offset-sm-3">
+                                <button type="submit" class="btn btn-primary mr-2">Save Changes</button>
+                                <button type="button" class="btn btn-secondary" id="cancelPersonalInfoEdit">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Change Password Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form id="changePasswordForm" action="{{ url_for('change_password') }}" method="POST">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                            <small class="form-text text-muted">Password must be at least 8 characters long</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Health Information Card -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Health Information</h5>
+                    <button class="btn btn-sm btn-primary" id="editHealthInfoBtn">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                </div>
+                <div class="card-body">
+                    <form id="healthInfoForm">
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Blood Type</label>
+                            <div class="col-sm-9">
+                                <select class="form-control-plaintext" id="bloodType" name="bloodType" disabled>
+                                    <option value="">Not specified</option>
+                                    <option value="A+" {% if user.blood_type and user.get_blood_type_display() == 'A+' %}selected{% endif %}>A+</option>
+                                    <option value="A-" {% if user.blood_type and user.blood_type.value == 'A-' %}selected{% endif %}>A-</option>
+                                    <option value="B+" {% if user.blood_type and user.blood_type.value == 'B+' %}selected{% endif %}>B+</option>
+                                    <option value="B-" {% if user.blood_type and user.blood_type.value == 'B-' %}selected{% endif %}>B-</option>
+                                    <option value="AB+" {% if user.blood_type and user.blood_type.value == 'AB+' %}selected{% endif %}>AB+</option>
+                                    <option value="AB-" {% if user.blood_type and user.blood_type.value == 'AB-' %}selected{% endif %}>AB-</option>
+                                    <option value="O+" {% if user.blood_type and user.blood_type.value == 'O+' %}selected{% endif %}>O+</option>
+                                    <option value="O-" {% if user.blood_type and user.blood_type.value == 'O-' %}selected{% endif %}>O-</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Height</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="number" step="0.1" class="form-control-plaintext" id="height" name="height" 
+                                           value="{{ user.height if user.height else '' }}" readonly>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Weight</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="number" step="0.1" class="form-control-plaintext" id="weight" name="weight" 
+                                           value="{{ user.weight if user.weight else '' }}" readonly>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">kg</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">BMI</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control-plaintext" value="{{ user.bmi if user.bmi else 'N/A' }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row d-none" id="healthInfoSubmitGroup">
+                            <div class="col-sm-9 offset-sm-3">
+                                <button type="submit" class="btn btn-primary mr-2">Save Changes</button>
+                                <button type="button" class="btn btn-secondary" id="cancelHealthInfoEdit">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                <p>All your data, including blood pressure records, will be permanently deleted.</p>
+                <form id="deleteAccountForm" action="{{ url_for('delete_account') }}" method="POST">
+                    <div class="form-group">
+                        <label for="confirmPasswordDelete">Enter your password to confirm:</label>
+                        <input type="password" class="form-control" id="confirmPasswordDelete" name="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="deleteAccountForm" class="btn btn-danger">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Profile specific styles */
+    .profile-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 20px;
+        background-color: #4e73df;
+        color: white;
+        font-size: 48px;
+        line-height: 100px;
+        border-radius: 50%;
+        text-align: center;
+    }
+    
+    .profile-username {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .profile-stats {
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+    
+    .profile-stats .col {
+        padding: 10px;
+    }
+    
+    .profile-stats strong {
+        font-size: 20px;
+        display: block;
+        color: #4e73df;
+    }
+    
+    .profile-stats span {
+        font-size: 12px;
+        color: #777;
+        text-transform: uppercase;
+    }
+    
+    .form-control-plaintext {
+        padding: 0.375rem 0;
+        line-height: 1.5;
+    }
+    
+    .form-control-plaintext:focus {
+        background-color: #f8f9fa;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e3e6f0;
+    }
+</style>
+
+<script>
+    // Enable editing for personal information
+    document.getElementById('editPersonalInfoBtn').addEventListener('click', function() {
+        const form = document.getElementById('personalInfoForm');
+        const inputs = form.querySelectorAll('input, select');
+        const submitGroup = document.getElementById('personalInfoSubmitGroup');
+        
+        inputs.forEach(input => {
+            if (input.readOnly) {
+                input.readOnly = false;
+                input.classList.remove('form-control-plaintext');
+                input.classList.add('form-control');
+            } else if (input.disabled) {
+                input.disabled = false;
+                input.classList.remove('form-control-plaintext');
+                input.classList.add('form-control');
+            }
+        });
+        
+        submitGroup.classList.remove('d-none');
+        this.disabled = true;
+    });
+    
+    document.getElementById('cancelPersonalInfoEdit').addEventListener('click', function() {
+        const form = document.getElementById('personalInfoForm');
+        const inputs = form.querySelectorAll('input, select');
+        const submitGroup = document.getElementById('personalInfoSubmitGroup');
+        
+        inputs.forEach(input => {
+            if (input.name === 'username' || input.name === 'email') {
+                input.readOnly = true;
+                input.classList.remove('form-control');
+                input.classList.add('form-control-plaintext');
+            } else if (input.disabled === false) {
+                input.disabled = true;
+                input.classList.remove('form-control');
+                input.classList.add('form-control-plaintext');
+            }
+        });
+        
+        submitGroup.classList.add('d-none');
+        document.getElementById('editPersonalInfoBtn').disabled = false;
+    });
+    
+    // Enable editing for health information
+    document.getElementById('editHealthInfoBtn').addEventListener('click', function() {
+        const form = document.getElementById('healthInfoForm');
+        const inputs = form.querySelectorAll('input, select');
+        const submitGroup = document.getElementById('healthInfoSubmitGroup');
+        
+        inputs.forEach(input => {
+            if (input.readOnly) {
+                input.readOnly = false;
+                input.classList.remove('form-control-plaintext');
+                input.classList.add('form-control');
+            } else if (input.disabled) {
+                input.disabled = false;
+                input.classList.remove('form-control-plaintext');
+                input.classList.add('form-control');
+            }
+        });
+        
+        submitGroup.classList.remove('d-none');
+        this.disabled = true;
+    });
+    
+    document.getElementById('cancelHealthInfoEdit').addEventListener('click', function() {
+        const form = document.getElementById('healthInfoForm');
+        const inputs = form.querySelectorAll('input, select');
+        const submitGroup = document.getElementById('healthInfoSubmitGroup');
+        
+        inputs.forEach(input => {
+            if (input.readOnly === false) {
+                input.readOnly = true;
+                input.classList.remove('form-control');
+                input.classList.add('form-control-plaintext');
+            } else if (input.disabled === false) {
+                input.disabled = true;
+                input.classList.remove('form-control');
+                input.classList.add('form-control-plaintext');
+            }
+        });
+        
+        submitGroup.classList.add('d-none');
+        document.getElementById('editHealthInfoBtn').disabled = false;
+    });
+    
+    // Form validation for change password
+    document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        if (newPassword.value.length < 8) {
+            alert('Password must be at least 8 characters long');
+            e.preventDefault();
+            return;
+        }
+        
+        if (newPassword.value !== confirmPassword.value) {
+            alert('Passwords do not match');
+            e.preventDefault();
+        }
+    });
+    
+    // Form validation for delete account
+    document.getElementById('deleteAccountForm').addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to permanently delete your account?')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

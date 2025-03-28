@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Custom CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login_reg.css') }}">
+
+<div class="container-fluid d-flex justify-content-center align-items-center auth-container">
+    <div class="card auth-card shadow-lg">
+        <div class="card-header bg-gradient-success text-white text-center">
+            <h3 class="card-title mb-0"><i class="fas fa-user-plus me-2"></i> Create Account</h3>
+        </div>
+        <div class="card-body p-4">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register') }}" id="registrationForm">
+                <!-- Username -->
+                <div class="mb-3 form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter username" required minlength="4" maxlength="20">
+                    </div>
+                    <small class="form-text text-muted">4-20 characters</small>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3 form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="Enter email" required>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3 form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter password" required minlength="8">
+                    </div>
+                    <small class="form-text text-muted">Minimum 8 characters</small>
+                    <div class="password-strength mt-2">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-3 form-group">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                               placeholder="Confirm password" required>
+                    </div>
+                    <div id="passwordMatch" class="form-text"></div>
+                </div>
+
+                <!-- Terms Checkbox -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                    <label class="form-check-label" for="terms">I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a></label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg btn-gradient">
+                        <i class="fas fa-user-plus me-2"></i> Register
+                    </button>
+                </div>
+
+                <!-- Login Link -->
+                <div class="text-center mt-3">
+                    <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-success">Login here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms of Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>By creating an account, you agree to our Terms of Service and Privacy Policy.</p>
+                <!-- Add your full terms here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const passwordStrength = document.getElementById('passwordStrength');
+    const passwordMatch = document.getElementById('passwordMatch');
+    
+    // Password strength indicator
+    password.addEventListener('input', function() {
+        const strength = calculatePasswordStrength(this.value);
+        passwordStrength.style.width = strength.percentage + '%';
+        passwordStrength.className = 'progress-bar bg-' + strength.color;
+    });
+    
+    // Password confirmation check
+    confirmPassword.addEventListener('input', function() {
+        if (this.value !== password.value) {
+            passwordMatch.innerHTML = '<i class="fas fa-times text-danger"></i> Passwords do not match';
+            passwordMatch.className = 'form-text text-danger';
+        } else {
+            passwordMatch.innerHTML = '<i class="fas fa-check text-success"></i> Passwords match';
+            passwordMatch.className = 'form-text text-success';
+        }
+    });
+    
+    function calculatePasswordStrength(password) {
+        let strength = 0;
+        if (password.length >= 8) strength += 20;
+        if (password.match(/[a-z]+/)) strength += 20;
+        if (password.match(/[A-Z]+/)) strength += 20;
+        if (password.match(/[0-9]+/)) strength += 20;
+        if (password.match(/[$@#&!]+/)) strength += 20;
+        
+        let color = 'danger';
+        if (strength > 60) color = 'warning';
+        if (strength > 80) color = 'success';
+        
+        return { percentage: strength, color: color };
+    }
+});
+</script>
+{% endblock %}

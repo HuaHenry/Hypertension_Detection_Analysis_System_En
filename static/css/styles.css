@@ -1,0 +1,138 @@
+body {
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar.bg-gradient {
+    background: linear-gradient(45deg, #6a11cb, #2575fc);
+    width: 100%;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    padding-top: 60px; /* 为顶部栏留出空间 */
+}
+
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: #f8f9fa; /* 浅色背景 */
+    color: #333; /* 深色文字 */
+    transition: all 0.3s;
+    border-right: 1px solid #ddd; /* 添加边框 */
+    height: calc(100vh - 60px); /* 减去顶部栏的高度 */
+    position: fixed;
+    top: 60px; /* 顶部栏的高度 */
+    left: 0;
+}
+
+#sidebar.active {
+    margin-left: -250px;
+}
+
+#sidebar .sidebar-header {
+    padding: 20px;
+    background: #e9ecef; /* 浅色背景 */
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+    /* margin-left:10px; */
+    /* width: 20px; */
+}
+
+#sidebar ul li a {
+    padding: 10px;
+    margin-left:10px;
+    font-size: 1.1em;
+    display: block;
+    color: #333; /* 深色文字 */
+}
+
+#sidebar ul li a:hover {
+    background: #ddd; /* 浅色背景 */
+    /* 不显示下划线 */
+    text-decoration: none;
+}
+
+#content {
+    width: 100%;
+    min-height: 100vh;
+    transition: all 0.3s;
+    margin-left: 250px; /* 左侧栏的宽度 */
+}
+
+#content.active {
+    margin-left: 0;
+}
+
+.container-fluid {
+    padding: 20px;
+}
+
+/* 页脚样式 */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #c7c7c7;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    z-index: 1000; /* 确保页脚在最上层 */
+}
+
+/* 调整内容区域，避免被页脚遮挡 */
+#content {
+    padding-bottom: 60px; /* 为页脚留出空间 */
+}
+
+/* 用户头像样式 */
+.user-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #3498db;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* 导航栏下拉菜单 */
+.navbar .dropdown-menu {
+    margin-top: 10px;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.navbar .dropdown-item {
+    padding: 8px 16px;
+    color: #495057;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #3498db;
+}
+
+/* 登录/注册按钮 */
+.btn-outline-light {
+    border-color: rgba(255,255,255,0.5);
+    color: white;
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255,255,255,0.1);
+    border-color: white;
+}
