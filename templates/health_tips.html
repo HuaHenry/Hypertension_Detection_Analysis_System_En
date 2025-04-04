@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid health-tips-container">
+    <h1 class="page-title mb-4">Health Tips Chatbot</h1>
+    
+    <div class="chat-container">
+        <ul id="chat-list">
+            {% for msg in conversation %}
+                {% if msg.sender == 'bot' %}
+                <li class="chat-bubble bot">
+                    <div class="message" id="initial-bot-message">
+                        <div class="loading-text">Reading historical blood pressure data…</div>
+                        <div class="spinner"></div>
+                    </div>
+                </li>
+                {% else %}
+                <li class="chat-bubble user">
+                    <div class="message">{{ msg.message }}</div>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="chat-input-container">
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Ask about health tips..." autocomplete="off">
+            <button id="send-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 配置 marked.js 不渲染 | 符号
+    marked.setOptions({
+        mangle: false,
+        headerIds: false
+    });
+    
+    // 初始评估
+    fetch("{{ url_for('health_tips_initial') }}")
+        .then(response => response.json())
+        .then(data => {
+            var botMsgElem = document.getElementById("initial-bot-message");
+            if (data && data.response) {
+                // 处理响应中的 | 符号
+                let cleanResponse = data.response.replace(/\|/g, '');
+                let htmlContent = marked.parse(cleanResponse);
+                botMsgElem.innerHTML = "";
+                new Typed("#initial-bot-message", {
+                    strings: [htmlContent],
+                    typeSpeed: 20,
+                    contentType: 'html',
+                    onStringTyped: function() {
+                        // 打字完成后添加换行
+                        botMsgElem.innerHTML += '<br>';
+                    }
+                });
+            } else {
+                botMsgElem.innerHTML = "<div class='message'>I'm here to help with health tips. What would you like to know?</div>";
+            }
+        })
+        .catch(err => {
+            console.error("Initial request failed:", err);
+            document.getElementById("initial-bot-message").innerHTML = 
+                "<div class='message'>Hello! I'm your health tips assistant. How can I help you today?</div>";
+        });
+    
+    // 发送消息功能
+    const sendBtn = document.getElementById("send-btn");
+    const userInput = document.getElementById("user-input");
+    
+    const sendMessage = () => {
+        const userMsg = userInput.value.trim();
+        if(!userMsg) return;
+        
+        addChatBubble("user", userMsg);
+        userInput.value = "";
+        
+        fetch("{{ url_for('health_tips_chat') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({ message: userMsg })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 处理响应中的 | 符号
+            let cleanResponse = data.response.replace(/\|/g, '');
+            addChatBubble("bot", cleanResponse);
+        })
+        .catch(err => {
+            console.error("Chat request failed:", err);
+            addChatBubble("bot", "Sorry, I'm having trouble responding. Please try again later.");
+        });
+    };
+    
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", (e) => e.key === "Enter" && sendMessage());
+    
+    function addChatBubble(sender, message) {
+        const chatList = document.getElementById("chat-list");
+        const li = document.createElement("li");
+        li.className = `chat-bubble ${sender}`;
+        
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message";
+        li.appendChild(msgDiv);
+        chatList.appendChild(li);
+        
+        // 滚动到底部
+        document.querySelector(".chat-container").scrollTop = chatList.scrollHeight;
+        
+        if(sender === "bot") {
+            const uniqueId = "bot-msg-" + Date.now();
+            msgDiv.id = uniqueId;
+            
+            // 处理消息中的 | 符号并转换为 HTML
+            const cleanMessage = message.replace(/\|/g, '');
+            const htmlContent = marked.parse(cleanMessage);
+            
+            new Typed(`#${uniqueId}`, {
+                strings: [htmlContent],
+                typeSpeed: 20,
+                contentType: 'html',
+                onStringTyped: function() {
+                    // 打字完成后添加换行
+                    msgDiv.innerHTML += '<br>';
+                }
+            });
+        } else {
+            msgDiv.textContent = message;
+        }
+    }
+});
+</script>
+
+<style>
+/* 基础样式 */
+.health-tips-container {
+    padding: 1.5rem;
+    background-color: #f8fafc;
+    border-radius: 16px;
+    max-width: 900px;
+    margin: 1.5rem auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.page-title {
+    text-align: center;
+    margin-bottom: 1.25rem;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 1.75rem;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* 聊天容器 - 高度适中，可滚动 */
+.chat-container {
+    height: 400px; /* 降低高度，适合大多数屏幕 */
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* 自定义滚动条 */
+.chat-container::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+.chat-container::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+}
+
+#chat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* 加载状态文本 */
+.loading-text {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+/* 聊天气泡 */
+.chat-bubble {
+    margin-bottom: 0.25rem;
+    max-width: 80%;
+    padding: 0.75rem 1.25rem;
+    border-radius: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    position: relative;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-bubble.user {
+    background-color: #3b82f6;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.chat-bubble.bot {
+    background-color: #f1f5f9;
+    color: #1e293b;
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.chat-bubble.bot .message {
+    color: #1e293b;
+}
+
+/* 输入区域 */
+.chat-input-container {
+    padding: 0 0.5rem;
+}
+
+.chat-input {
+    display: flex;
+    gap: 0.75rem;
+    background: white;
+    border-radius: 2rem;
+    padding: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+#user-input {
+    flex-grow: 1;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 2rem;
+    outline: none;
+    background: transparent;
+}
+
+#send-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+#send-btn svg {
+    stroke: white;
+}
+
+/* 加载动画 */
+.spinner {
+    border: 3px solid rgba(59, 130, 246, 0.1);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border-top-color: #3b82f6;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .health-tips-container {
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    
+    .chat-container {
+        height: 350px;
+        padding: 1rem;
+    }
+    
+    .chat-bubble {
+        max-width: 85%;
+        font-size: 0.9rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}

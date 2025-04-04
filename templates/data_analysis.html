@@ -79,9 +79,9 @@
                             <i class="fas fa-table"></i> Measurement History
                         </h5>
                         <div class="table-actions">
-                            <button class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-download"></i> Export
-                            </button>
+                            <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i> Export CSV
+                            </a>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -93,7 +93,6 @@
                                     <th>Systolic</th>
                                     <th>Diastolic</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -105,20 +104,15 @@
                                     <td class="diastolic-value">{{ record.diastolic }}</td>
                                     <td>
                                         <span class="badge status-badge 
-                                            {% if record.status == '正常' %}bg-success
-                                            {% elif record.status == '偏高' %}bg-warning
-                                            {% else %}bg-danger
+                                            {% if record.status == 'Low Risk' %}bg-success
+                                            {% elif record.status == 'High Risk' %}bg-danger
+                                            {% else %}bg-warning
                                             {% endif %}">
-                                            {% if record.status == '正常' %}Normal
-                                            {% elif record.status == '偏高' %}Elevated
-                                            {% else %}High
+                                            {% if record.status == 'Low Risk' %}Low
+                                            {% elif record.status == 'High Risk' %}High
+                                            {% else %}N/A
                                             {% endif %}
                                         </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-info-circle"></i>
-                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -399,6 +393,7 @@
         font-weight: 600;
         color: #495057;
         border-top: none;
+        text-align: left;
     }
     
     .table td {

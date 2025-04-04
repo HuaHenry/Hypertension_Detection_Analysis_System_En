@@ -47,10 +47,11 @@
         <nav id="sidebar">
             <ul class="list-unstyled components">
                 <li><a href="{{ url_for('index') }}"><i class="fas fa-home" id="fa_home" style="width: 30px;"></i> Home</a></li>
+                <li><a href="{{ url_for('add_record') }}"><i class="fas fa-plus-circle" style="width: 30px;"></i> Add Record</a></li>
                 <li><a href="{{ url_for('history') }}"><i class="fas fa-history" style="width: 30px;"></i> Records</a></li>
                 <li><a href="{{ url_for('data_analysis') }}"><i class="fas fa-chart-line" style="width: 30px;"></i> Analytics</a></li>
                 <li><a href="{{ url_for('blood_pressure_assessment') }}"><i class="fas fa-clipboard-check" style="width: 30px;"></i> BP Check</a></li>
-                <li><a href="{{ url_for('health_knowledge') }}"><i class="fas fa-book" style="width: 30px;"></i> Health Tips</a></li>
+                <li><a href="{{ url_for('health_tips') }}"><i class="fas fa-book" style="width: 30px;"></i> Health Tips</a></li>
                 {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('personal_center') }}"><i class="fas fa-user" style="width: 30px;"></i> Profile</a></li>
                 <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt" style="width: 30px;"></i> Logout</a></li>

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_record.css') }}">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card record-card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-heartbeat mr-2"></i>Add Blood Pressure Record</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_record') }}">
+                        <div class="form-group row">
+                            <label for="systolic" class="col-md-4 col-form-label text-md-right">
+                                <i class="fas fa-tint text-danger mr-2"></i>Systolic (mmHg)
+                            </label>
+                            <div class="col-md-6">
+                                <input type="number" id="systolic" name="systolic" class="form-control" required 
+                                       min="50" max="250" placeholder="e.g. 120">
+                                <small class="form-text text-muted">Upper number (normal: below 120)</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="diastolic" class="col-md-4 col-form-label text-md-right">
+                                <i class="fas fa-tint text-info mr-2"></i>Diastolic (mmHg)
+                            </label>
+                            <div class="col-md-6">
+                                <input type="number" id="diastolic" name="diastolic" class="form-control" required 
+                                       min="30" max="150" placeholder="e.g. 80">
+                                <small class="form-text text-muted">Lower number (normal: below 80)</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="pulse" class="col-md-4 col-form-label text-md-right">
+                                <i class="fas fa-heartbeat text-danger mr-2"></i>Pulse (bpm)
+                            </label>
+                            <div class="col-md-6">
+                                <input type="number" id="pulse" name="pulse" class="form-control" 
+                                       min="30" max="200" placeholder="e.g. 72">
+                                <small class="form-text text-muted">Optional - Heart beats per minute</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="notes" class="col-md-4 col-form-label text-md-right">
+                                <i class="fas fa-sticky-note text-secondary mr-2"></i>Notes
+                            </label>
+                            <div class="col-md-6">
+                                <textarea id="notes" name="notes" class="form-control" rows="3" 
+                                          placeholder="Any additional notes about this reading"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mb-0">
+                            <div class="col-md-6 offset-md-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save mr-2"></i>Save Record
+                                </button>
+                                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ml-2">
+                                    <i class="fas fa-times mr-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Blood Pressure Guide -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i>Blood Pressure Guide</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Systolic (mmHg)</th>
+                                    <th>Diastolic (mmHg)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-success">
+                                    <td>Normal</td>
+                                    <td>Below 120</td>
+                                    <td>Below 80</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td>Elevated</td>
+                                    <td>120-129</td>
+                                    <td>Below 80</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td>High (Stage 1)</td>
+                                    <td>130-139</td>
+                                    <td>80-89</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td>High (Stage 2)</td>
+                                    <td>140 or higher</td>
+                                    <td>90 or higher</td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td>Low</td>
+                                    <td>Below 90</td>
+                                    <td>Below 60</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .record-card {
+        border-radius: 15px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        border: none;
+        overflow: hidden;
+    }
+    
+    .record-card .card-header {
+        border-radius: 15px 15px 0 0 !important;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #4a90e2, #3a7bd5);
+    }
+    
+    .form-control {
+        border-radius: 10px;
+        padding: 12px 15px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+        border-radius: 10px;
+    }
+    
+    label {
+        font-weight: 600;
+        color: #555;
+    }
+    
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    
+    @media (max-width: 768px) {
+        .form-group.row > label {
+            text-align: left !important;
+            padding-left: 15px;
+        }
+    }
+</style>
+{% endblock %}

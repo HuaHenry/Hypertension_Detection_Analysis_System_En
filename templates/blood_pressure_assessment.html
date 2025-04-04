@@ -137,10 +137,12 @@
         </div>
         <div class="card-body">
             <div id="assessmentResult"></div>
-            <div id="riskDetails" class="mt-3"></div>
-            <div class="text-center mt-3">
-                <button id="newAssessmentBtn" class="btn btn-outline-primary">
-                    <i class="fas fa-redo"></i> Perform New Assessment
+            <div class="text-center mt-4">
+                <a href="/health_tips" class="btn btn-primary">
+                    <i class="fas fa-lightbulb"></i> View Health Tips
+                </a>
+                <button id="newAssessmentBtn" class="btn btn-outline-primary ms-2">
+                    <i class="fas fa-redo"></i> New Assessment
                 </button>
             </div>
         </div>
@@ -153,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const assessmentForm = document.getElementById('assessmentForm');
     const resultsContainer = document.getElementById('resultsContainer');
     const resultDiv = document.getElementById('assessmentResult');
-    const riskDetailsDiv = document.getElementById('riskDetails');
     const newAssessmentBtn = document.getElementById('newAssessmentBtn');
     const cigsPerDayField = document.getElementById('cigsPerDayField');
 
@@ -221,27 +222,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set main result
         resultDiv.className = `alert alert-${data.status}`;
-        resultDiv.innerHTML = `<h4>${data.message}</h4>`;
-        
-        // Set detailed results if available
-        if (data.details) {
-            riskDetailsDiv.innerHTML = `
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Risk Assessment Details</h5>
-                        ${data.details.risk_score ? `<p><strong>Risk Score:</strong> ${data.details.risk_score}</p>` : ''}
-                        ${data.details.recommendations ? `
-                        <h6 class="mt-3">Recommendations:</h6>
-                        <ul class="list-group">
-                            ${data.details.recommendations.map(rec => `<li class="list-group-item">${rec}</li>`).join('')}
-                        </ul>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        } else {
-            riskDetailsDiv.innerHTML = '';
-        }
+        resultDiv.innerHTML = `
+            <h4 class="mb-3">${data.message}</h4>
+            <p class="mb-0">Your risk score: ${data.details.risk_score}</p>
+        `;
         
         // Scroll to results
         resultsContainer.scrollIntoView({ behavior: 'smooth' });
