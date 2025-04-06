@@ -140,7 +140,7 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    <form id="healthInfoForm">
+                    <form id="healthInfoForm" action="{{ url_for('update_profile') }}" method="POST">
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">Blood Type</label>
                             <div class="col-sm-9">
@@ -161,7 +161,7 @@
                             <label class="col-sm-3 col-form-label">Height</label>
                             <div class="col-sm-9">
                                 <div class="input-group">
-                                    <input type="number" step="0.1" class="form-control-plaintext" id="height" name="height" 
+                                    <input type="number" class="form-control-plaintext" id="height" name="height" 
                                            value="{{ user.height if user.height else '' }}" readonly>
                                     <div class="input-group-append">
                                         <span class="input-group-text">cm</span>
@@ -173,7 +173,7 @@
                             <label class="col-sm-3 col-form-label">Weight</label>
                             <div class="col-sm-9">
                                 <div class="input-group">
-                                    <input type="number" step="0.1" class="form-control-plaintext" id="weight" name="weight" 
+                                    <input type="number" class="form-control-plaintext" id="weight" name="weight" 
                                            value="{{ user.weight if user.weight else '' }}" readonly>
                                     <div class="input-group-append">
                                         <span class="input-group-text">kg</span>

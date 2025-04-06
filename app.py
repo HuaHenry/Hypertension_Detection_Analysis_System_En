@@ -16,6 +16,14 @@ import seaborn as sns
 import json
 import os
 
+from matplotlib.backends.backend_pdf import PdfPages
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from tempfile import NamedTemporaryFile
+from flask import send_file
+
 import csv
 from io import StringIO
 from flask import make_response
@@ -31,9 +39,16 @@ import requests
 from flask import Flask, render_template, request, jsonify, make_response
 from flask_login import login_required, current_user
 
+import matplotlib
+matplotlib.use('Agg')  # 设置为非GUI后端，避免 macOS 后端崩溃
+
 model = joblib.load('ML/best_heart_disease_model.pkl')
 
 from openai import OpenAI
+from PyPDF2 import PdfMerger
+from matplotlib.font_manager import FontProperties
+
+
 
 class GenderEnum(Enum):
     MALE = 'male'
@@ -263,87 +278,6 @@ def add_record():
     
     return render_template('add_record.html')
 
-# def predict_blood_pressure_risk(user, systolic, diastolic, pulse):
-#     """
-#     调用您的ML模型预测血压风险
-#     这里应该是您提供的ML算法的接口
-#     """
-#     # 这里应该是调用您提供的ML模型的代码
-#     # 示例实现 - 请替换为您的实际模型调用
-    
-#     # 构建特征数据框
-#     input_data = pd.DataFrame({
-#         'male': [1 if user.gender == GenderEnum.MALE else 0],
-#         'age': [user.age or 50],  # 默认值以防用户没有设置年龄
-#         'currentSmoker': [1 if user.is_smoker else 0],
-#         'cigsPerDay': [0],  # 需要根据用户数据设置
-#         'BPMeds': [1 if user.has_hypertension else 0],
-#         'diabetes': [1 if user.has_diabetes else 0],
-#         'totChol': [200],  # 需要实际数据
-#         'sysBP': [systolic],
-#         'diaBP': [diastolic],
-#         'BMI': [user.bmi or 25],  # 使用用户BMI或默认值
-#         'heartRate': [pulse or 72],  # 使用脉搏或默认值
-#         'glucose': [100]  # 需要实际数据
-#     })
-    
-#     # 这里应该调用您的预处理和预测流程
-#     # prediction, probability = your_ml_model.predict(input_data)
-    
-#     # 示例返回值 - 替换为实际模型输出
-#     risk_score = random.uniform(0, 1)  # 示例随机值
-#     if risk_score < 0.3:
-#         prediction = "Low risk"
-#     elif risk_score < 0.6:
-#         prediction = "Medium risk"
-#     else:
-#         prediction = "High risk"
-    
-#     return prediction, risk_score
-
-# def predict_blood_pressure_risk(user, systolic, diastolic, pulse):
-#     """
-#     Use the trained machine learning model to predict blood pressure risk.
-#     """
-#     # Construct the feature data
-#     input_data = pd.DataFrame({
-#         'male': [1 if user.gender == GenderEnum.MALE else 0],
-#         'age': [user.age or 50],
-#         'currentSmoker': [1 if user.is_smoker else 0],
-#         'cigsPerDay': [0],  # Adjust if needed based on user data
-#         'BPMeds': [1 if user.has_hypertension else 0],
-#         'diabetes': [1 if user.has_diabetes else 0],
-#         'totChol': [200],   # Example value, adjust as necessary
-#         'sysBP': [systolic],
-#         'diaBP': [diastolic],
-#         'BMI': [user.bmi or 25],
-#         'heartRate': [pulse or 72],
-#         'glucose': [100]    # Example value
-#     })
-    
-#     # Align input_data with the training format (train_format)
-#     processed_input = pd.DataFrame()
-#     for col in train_format.columns:
-#         if col in input_data.columns:
-#             processed_input[col] = input_data[col]
-#         else:
-#             processed_input[col] = 0
-#     processed_input = processed_input[train_format.columns]
-    
-#     # Make prediction
-#     prediction = model.predict(processed_input)
-#     probability = model.predict_proba(processed_input)[:, 1]  # Assume label 1 indicates high risk
-    
-#     # Determine risk status
-#     if prediction[0] == 1:
-#         risk_status = "High risk"
-#     elif probability[0] > 0.4:
-#         risk_status = "Medium risk"
-#     else:
-#         risk_status = "Low risk"
-    
-#     return risk_status, float(probability[0])
-
 def predict_blood_pressure_risk(user, systolic, diastolic, pulse):
     """
     使用训练好的模型预测血压风险，返回预测的 Risk（0 或 1）及其置信度（正类概率）。
@@ -449,54 +383,121 @@ def personal_center():
 @app.route('/update_profile', methods=['POST'])
 @login_required
 def update_profile():
-    # 基本账户信息
-    username = request.form.get('username')
-    email = request.form.get('email')
-    
-    # 验证用户名是否已存在
-    if username != current_user.username:
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash('Username already exists', 'danger')
-            return redirect(url_for('personal_center'))
-    
-    # 验证邮箱是否已存在
-    if email != current_user.email:
-        existing_email = User.query.filter_by(email=email).first()
-        if existing_email:
-            flash('Email already registered', 'danger')
-            return redirect(url_for('personal_center'))
-    
-    # 更新个人信息
     try:
-        current_user.username = username
-        current_user.email = email
-        current_user.age = request.form.get('age', type=int)
-        
-        # 处理性别 - 使用新方法
+        # ========== 1. 可选更新：用户名 ==========
+        username = request.form.get('username')
+        if username and username != current_user.username:
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                flash('Username already exists', 'danger')
+                return redirect(url_for('personal_center'))
+            current_user.username = username
+
+        # ========== 2. 可选更新：邮箱 ==========
+        email = request.form.get('email')
+        if email and email != current_user.email:
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                flash('Email already registered', 'danger')
+                return redirect(url_for('personal_center'))
+            current_user.email = email
+
+        # ========== 3. 年龄 ==========
+        age = request.form.get('age')
+        if age:
+            current_user.age = int(age)
+
+        # ========== 4. 性别 ==========
         gender = request.form.get('gender')
         if gender:
             current_user.gender = GenderEnum.get_by_value(gender)
-            
-        # 处理身高体重
-        current_user.height = request.form.get('height', type=float)
-        current_user.weight = request.form.get('weight', type=float)
-        
-        # 处理血型
+
+        # ========== 5. 身高/体重 ==========
+        height = request.form.get('height')
+        weight = request.form.get('weight')
+        if height:
+            current_user.height = float(height)
+        if weight:
+            current_user.weight = float(weight)
+
+        # ========== 6. 血型 ==========
         blood_type = request.form.get('bloodType')
         if blood_type:
             current_user.blood_type = BloodTypeEnum(blood_type)
-        
+
         db.session.commit()
-        flash('Profile updated successfully', 'success')
+        # flash('Profile updated successfully', 'success')
     except ValueError as e:
         db.session.rollback()
-        flash(f'Invalid value: {str(e)}', 'danger')
+        print(f'Invalid value: {str(e)}')
+        # flash(f'Invalid value: {str(e)}', 'danger')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error updating profile: {str(e)}', 'danger')
-    
+        print(f'Error updating profile: {str(e)}')
+        # flash(f'Error updating profile: {str(e)}', 'danger')
+
     return redirect(url_for('personal_center'))
+
+# @app.route('/update_profile', methods=['POST'])
+# @login_required
+# def update_profile():
+#     # 基本账户信息
+#     username = request.form.get('username')
+#     email = request.form.get('email')
+    
+#     # 验证用户名是否已存在
+#     if username != current_user.username:
+#         existing_user = User.query.filter_by(username=username).first()
+#         if existing_user:
+#             flash('Username already exists', 'danger')
+#             return redirect(url_for('personal_center'))
+    
+#     # 验证邮箱是否已存在
+#     if email != current_user.email:
+#         existing_email = User.query.filter_by(email=email).first()
+#         if existing_email:
+#             flash('Email already registered', 'danger')
+#             return redirect(url_for('personal_center'))
+    
+#     # 更新个人信息
+#     try:
+#         current_user.username = username
+#         current_user.email = email
+#         current_user.age = request.form.get('age', type=int)
+        
+#         # 处理性别 - 使用新方法
+#         gender = request.form.get('gender')
+#         if gender:
+#             current_user.gender = GenderEnum.get_by_value(gender)
+            
+#         # 处理身高体重
+#         # print(request.form.get('height', type=float))
+#         # print(request.form.get('weight', type=float))
+#         if request.form.get('height', type=float) is not None:
+#             print(request.form.get('height', type=float))
+#             current_user.height = request.form.get('height', type=float)
+
+#         if request.form.get('weight', type=float) is not None:
+#             print(request.form.get('weight', type=float))
+#             current_user.weight = request.form.get('weight', type=float)
+        
+#         # 处理血型
+#         blood_type = request.form.get('bloodType')
+#         if blood_type:
+#             current_user.blood_type = BloodTypeEnum(blood_type)
+        
+#         db.session.commit()
+#         # flash('Profile updated successfully', 'success')
+#     except ValueError as e:
+#         db.session.rollback()
+#         print(f'Invalid value: {str(e)}')
+#         # flash(f'Invalid value: {str(e)}', 'danger')
+#     except Exception as e:
+#         db.session.rollback()
+#         print(f'Error updating profile: {str(e)}')
+#         # flash(f'Error updating profile: {str(e)}', 'danger')
+    
+#     return redirect(url_for('personal_center'))
 
 #  登录路由
 @app.route('/login', methods=['GET', 'POST'])
@@ -644,38 +645,380 @@ def data_analysis():
 #     ]
 #     return render_template('data_analysis.html', records=records)
 
-@app.route('/export_csv')
+# @app.route('/export_csv')
+# @login_required
+# def export_csv():
+#     # 查询当前用户的所有血压记录（按记录时间升序排列）
+#     records = BloodPressureRecord.query.filter_by(user_id=current_user.id)\
+#                 .order_by(BloodPressureRecord.recorded_at.asc()).all()
+    
+#     # 使用 StringIO 和 csv 模块生成 CSV 内容
+#     si = StringIO()
+#     cw = csv.writer(si)
+    
+#     # 写入表头
+#     cw.writerow(["Date", "Time", "Systolic", "Diastolic", "Status"])
+    
+#     # 写入每条记录（假设 BloodPressureRecord.recorded_at 为 datetime 对象）
+#     for record in records:
+#         cw.writerow([
+#             record.recorded_at.strftime("%Y-%m-%d"),
+#             record.recorded_at.strftime("%H:%M"),
+#             record.systolic,
+#             record.diastolic,
+#             record.status
+#         ])
+    
+#     # 获取 CSV 内容
+#     output = si.getvalue()
+    
+#     # 创建响应，并设置响应头以实现下载 CSV 文件
+#     response = make_response(output)
+#     response.headers["Content-Disposition"] = "attachment; filename=bp_records.csv"
+#     response.headers["Content-Type"] = "text/csv"
+#     return response
+
+from io import BytesIO
+from datetime import datetime
+import matplotlib.pyplot as plt
+import pandas as pd
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+)
+from reportlab.lib.enums import TA_CENTER
+from flask import send_file
+
+@app.route('/export_pdf')
 @login_required
-def export_csv():
-    # 查询当前用户的所有血压记录（按记录时间升序排列）
+def export_pdf():
+    # 获取数据并按时间排序
     records = BloodPressureRecord.query.filter_by(user_id=current_user.id)\
                 .order_by(BloodPressureRecord.recorded_at.asc()).all()
+
+    if not records:
+        flash('No records available to export.', 'warning')
+        return redirect(url_for('data_analysis'))
+
+    # 准备数据（时间精确到秒）
+    dates = [record.recorded_at.strftime('%Y-%m-%d %H:%M:%S') for record in records]
+    systolic = [record.systolic for record in records]
+    diastolic = [record.diastolic for record in records]
+    pulses = [record.pulse or 0 for record in records]
+    statuses = [record.status for record in records]
+
+    # 创建PDF缓冲区
+    buffer = BytesIO()
     
-    # 使用 StringIO 和 csv 模块生成 CSV 内容
-    si = StringIO()
-    cw = csv.writer(si)
+    # 设置专业医疗报告样式
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                          rightMargin=30, leftMargin=30,
+                          topMargin=30, bottomMargin=30,
+                          title=f"{current_user.username}'s Health Report")
     
-    # 写入表头
-    cw.writerow(["Date", "Time", "Systolic", "Diastolic", "Status"])
+    # 自定义专业样式
+    styles = getSampleStyleSheet()
     
-    # 写入每条记录（假设 BloodPressureRecord.recorded_at 为 datetime 对象）
-    for record in records:
-        cw.writerow([
-            record.recorded_at.strftime("%Y-%m-%d"),
-            record.recorded_at.strftime("%H:%M"),
-            record.systolic,
-            record.diastolic,
-            record.status
+    # 主标题样式
+    styles.add(ParagraphStyle(
+        name='MedicalTitle',
+        fontSize=16,
+        leading=20,
+        alignment=TA_CENTER,
+        spaceAfter=20,
+        fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#005b96')
+    ))
+    
+    # 副标题样式
+    styles.add(ParagraphStyle(
+        name='MedicalHeader',
+        fontSize=12,
+        leading=16,
+        spaceBefore=15,
+        spaceAfter=10,
+        fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#1a7bb9')
+    ))
+    
+    # 健康指标样式
+    styles.add(ParagraphStyle(
+        name='MetricLabel',
+        fontSize=10,
+        leading=14,
+        fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#333333')
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='MetricValue',
+        fontSize=10,
+        leading=14,
+        fontName='Helvetica',
+        textColor=colors.HexColor('#555555')
+    ))
+
+    # 构建报告内容
+    story = []
+    
+    # ===== 1. 专业报告标题 =====
+    title_text = f"<b>MEDICAL HEALTH REPORT</b><br/><font size=10>Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</font>"
+    story.append(Paragraph(title_text, styles['MedicalTitle']))
+    
+    # ===== 2. 患者基本信息 =====
+    story.append(Paragraph("PATIENT INFORMATION", styles['MedicalHeader']))
+    
+    # 创建健康指标表格（仅显示要求的4项）
+    metrics = [
+        ["Username:", current_user.username],
+        ["Height:", f"{current_user.height} cm" if current_user.height else "Not provided"],
+        ["Weight:", f"{current_user.weight} kg" if current_user.weight else "Not provided"],
+        ["BMI:", f"{current_user.bmi:.1f}" if current_user.bmi else "Not calculated"],
+        ["Blood Type:", current_user.get_blood_type_display() if current_user.blood_type else "Unknown"]
+    ]
+    
+    # 使用专业表格布局
+    metric_table = Table([
+        [Paragraph(item[0], styles['MetricLabel']), Paragraph(item[1], styles['MetricValue'])]
+        for item in metrics
+    ], colWidths=[1.5*inch, 3*inch])
+    
+    metric_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('LEFTPADDING', (0,0), (0,-1), 5),
+        ('RIGHTPADDING', (1,0), (1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f0f8ff')),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#d0e0f0')),
+    ]))
+    
+    story.append(metric_table)
+    story.append(Spacer(1, 25))
+    
+    # ===== 3. 专业血压趋势图 =====
+    story.append(Paragraph("BLOOD PRESSURE TREND ANALYSIS", styles['MedicalHeader']))
+    
+    # 设置专业医疗图表样式
+    plt.style.use('ggplot')
+    fig, ax = plt.subplots(figsize=(7, 4))
+    
+    # 绘制专业趋势线
+    ax.plot(dates, systolic, color='#e63946', linewidth=2, 
+            marker='o', markersize=6, label='Systolic (mmHg)')
+    ax.plot(dates, diastolic, color='#457b9d', linewidth=2,
+            marker='s', markersize=6, label='Diastolic (mmHg)')
+    
+    # 专业图表格式设置
+    ax.set_ylabel('Blood Pressure (mmHg)', fontsize=11, labelpad=10)
+    ax.set_xlabel('Measurement Time', fontsize=11, labelpad=10)
+    
+    # 智能时间刻度显示（自动调整密度）
+    if len(dates) > 10:
+        step = max(1, len(dates) // 8)
+        ax.set_xticks(dates[::step])
+    else:
+        ax.set_xticks(dates)
+    
+    plt.xticks(rotation=45, ha='right', fontsize=9)
+    plt.yticks(fontsize=9)
+    
+    # 添加专业图例和网格
+    ax.legend(frameon=True, fontsize=10, loc='upper right')
+    ax.grid(True, linestyle=':', alpha=0.7)
+    
+    # 设置专业背景
+    ax.set_facecolor('#f8f9fa')
+    fig.patch.set_facecolor('#ffffff')
+    
+    plt.tight_layout()
+    
+    # 保存高清图表
+    imgdata = BytesIO()
+    plt.savefig(imgdata, format='png', dpi=300, bbox_inches='tight')
+    plt.close()
+    imgdata.seek(0)
+    
+    story.append(Image(imgdata, width=6.5*inch, height=3.5*inch))
+    story.append(Spacer(1, 25))
+    
+    # ===== 4. 专业数据表格 =====
+    story.append(Paragraph("DETAILED MEASUREMENT RECORDS", styles['MedicalHeader']))
+    
+    # 准备表格数据（精确到秒）
+    table_data = [
+        ["Measurement Time", "Systolic", "Diastolic", "Pulse", "Status"]
+    ]
+    
+    for r in records:
+        table_data.append([
+            r.recorded_at.strftime("%Y-%m-%d %H:%M:%S"),
+            str(r.systolic),
+            str(r.diastolic),
+            str(r.pulse) if r.pulse else "-",
+            r.status
         ])
     
-    # 获取 CSV 内容
-    output = si.getvalue()
+    # 创建专业医疗表格
+    table = Table(table_data, repeatRows=1, 
+                 colWidths=[1.8*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1*inch])
     
-    # 创建响应，并设置响应头以实现下载 CSV 文件
-    response = make_response(output)
-    response.headers["Content-Disposition"] = "attachment; filename=bp_records.csv"
-    response.headers["Content-Type"] = "text/csv"
-    return response
+    # 专业表格样式
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#005b96')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 10),
+        ('FONTSIZE', (0,1), (-1,-1), 9),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#d0e0f0')),
+        ('BACKGROUND', (0,1), (-1,-1), colors.white),
+    ]))
+    
+    # 添加交替行颜色
+    for i in range(1, len(table_data)):
+        if i % 2 == 0:
+            table.setStyle(TableStyle(
+                [('BACKGROUND', (0,i), (-1,i), colors.HexColor('#f5faff'))]
+            ))
+    
+    story.append(table)
+    story.append(Spacer(1, 15))
+    
+    # ===== 5. 专业页脚 =====
+    footer = f"Confidential Medical Report | Generated by Health Monitoring System | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    story.append(Paragraph(footer, ParagraphStyle(
+        name='Footer',
+        fontSize=8,
+        textColor=colors.HexColor('#7f8c8d'),
+        alignment=TA_CENTER
+    )))
+    
+    # 构建专业PDF文档
+    doc.build(story)
+    buffer.seek(0)
+    
+    return send_file(buffer,
+                   as_attachment=True,
+                   download_name=f'Medical_Report_{current_user.username}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf',
+                   mimetype='application/pdf')
+
+# from flask import send_file
+# from reportlab.platypus import (
+#     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+# )
+# from reportlab.lib.styles import getSampleStyleSheet
+# from reportlab.lib.pagesizes import A4
+# from reportlab.lib import colors
+# from reportlab.lib.units import cm
+# from tempfile import NamedTemporaryFile
+# import matplotlib.pyplot as plt
+# import matplotlib
+# from matplotlib.font_manager import FontProperties
+# import pandas as pd
+
+# matplotlib.use('Agg')  # Use non-GUI backend
+
+# @app.route('/export_pdf')
+# @login_required
+# def export_pdf():
+#     records = BloodPressureRecord.query.filter_by(user_id=current_user.id)\
+#         .order_by(BloodPressureRecord.recorded_at.asc()).all()
+
+#     if not records:
+#         flash('No data available to export.', 'warning')
+#         return redirect(url_for('data_analysis'))
+
+#     # === Prepare data ===
+#     dates = [r.recorded_at.strftime('%Y-%m-%d %H:%M') for r in records]
+#     systolic = [r.systolic for r in records]
+#     diastolic = [r.diastolic for r in records]
+#     status = [r.status for r in records]
+
+#     # === Use a Chinese-supporting font ===
+#     font_path = '/System/Library/Fonts/STHeiti Medium.ttc'  # macOS font
+#     cn_font = FontProperties(fname=font_path)
+
+#     # === Create line chart ===
+#     chart_path1 = NamedTemporaryFile(delete=False, suffix=".png").name
+#     plt.figure(figsize=(10, 4))
+#     plt.plot(dates, systolic, marker='o', label='Systolic', linewidth=2)
+#     plt.plot(dates, diastolic, marker='x', label='Diastolic', linewidth=2)
+#     plt.xticks(rotation=45, ha='right')
+#     plt.title('Blood Pressure Trend', fontproperties=cn_font)
+#     plt.xlabel('Date', fontproperties=cn_font)
+#     plt.ylabel('mmHg', fontproperties=cn_font)
+#     plt.legend()
+#     plt.tight_layout()
+#     plt.savefig(chart_path1, dpi=150)
+#     plt.close()
+
+#     # === Create bar chart ===
+#     chart_path2 = NamedTemporaryFile(delete=False, suffix=".png").name
+#     plt.figure(figsize=(8, 4))
+#     pd.Series(status).value_counts().plot(kind='bar', color='skyblue')
+#     plt.title('Risk Status Distribution', fontproperties=cn_font)
+#     plt.ylabel('Count', fontproperties=cn_font)
+#     plt.xticks(rotation=45, fontproperties=cn_font)
+#     plt.tight_layout()
+#     plt.savefig(chart_path2, dpi=150)
+#     plt.close()
+
+#     # === Create final PDF ===
+#     pdf_file = NamedTemporaryFile(delete=False, suffix='.pdf')
+#     doc = SimpleDocTemplate(pdf_file.name, pagesize=A4)
+#     styles = getSampleStyleSheet()
+#     story = []
+
+#     # === Title and User Info ===
+#     story.append(Paragraph("🩺 Blood Pressure Health Report", styles['Title']))
+#     story.append(Spacer(1, 12))
+#     story.append(Paragraph(f"👤 Username: <b>{current_user.username}</b>", styles['Normal']))
+#     story.append(Spacer(1, 18))
+
+#     # === Charts ===
+#     story.append(Paragraph("📈 Blood Pressure Trend", styles['Heading2']))
+#     story.append(Image(chart_path1, width=16*cm, height=6*cm))
+#     story.append(Spacer(1, 18))
+
+#     story.append(Paragraph("📊 Risk Status Distribution", styles['Heading2']))
+#     story.append(Image(chart_path2, width=14*cm, height=5*cm))
+#     story.append(Spacer(1, 24))
+
+#     # === Table ===
+#     story.append(Paragraph("📋 Detailed Blood Pressure Records", styles['Heading2']))
+#     table_data = [["Date", "Systolic", "Diastolic", "Pulse", "Status"]]
+#     for r in records:
+#         table_data.append([
+#             r.recorded_at.strftime('%Y-%m-%d %H:%M'),
+#             r.systolic,
+#             r.diastolic,
+#             r.pulse or "-",
+#             r.status
+#         ])
+
+#     table = Table(table_data, colWidths=[110, 60, 60, 60, 100])
+#     table.setStyle(TableStyle([
+#         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#d3d3d3')),
+#         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+#         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+#         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+#         ('FONTSIZE', (0, 0), (-1, -1), 10),
+#         ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+#         ('GRID', (0, 0), (-1, -1), 0.4, colors.grey),
+#     ]))
+#     story.append(table)
+
+#     # === Build PDF and return ===
+#     doc.build(story)
+
+#     return send_file(pdf_file.name,
+#                      as_attachment=True,
+#                      download_name='blood_pressure_report.pdf',
+#                      mimetype='application/pdf')
 
 @app.route('/blood_pressure_assessment', methods=['GET', 'POST'])
 def blood_pressure_assessment():
