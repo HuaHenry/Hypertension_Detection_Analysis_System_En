@@ -1228,8 +1228,8 @@ def delete_account():
     
 # 创建 OpenAI 客户端（使用 OpenAI SDK）
 client = OpenAI(
-    base_url='https://api.openai-proxy.org/v1',  # 注意需要包含 /v1 后缀
-    api_key='sk-CRzCVcjeuipYRrm1BbzdFN0va2RRqG6180f8G5pKJDWyqCL7'  # 请替换为你的 API Key
+    base_url='https://api.openai-proxy.org/v1',  
+    api_key='替换' 
 )
 
 def call_qwen_api(prompt):
